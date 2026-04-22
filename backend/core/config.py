@@ -9,8 +9,11 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7 # Refresh token duration
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://neuroshield:password@localhost:5432/neuroshield_db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./neuroshield.db")
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+    # CORS
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:8081,http://localhost:3000,http://localhost:19006,*")
 
     # Razorpay
     RAZORPAY_KEY_ID: str = os.getenv("RAZORPAY_KEY_ID", "rzp_test_mockkeyid123")

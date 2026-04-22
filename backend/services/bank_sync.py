@@ -8,7 +8,7 @@ from models.user import User
 from models.transaction import Transaction
 from ml.fraud_model import fraud_model
 from api.transactions import get_or_create_profile
-from websockets.alerts import manager
+from ws_manager.alerts import manager
 
 MERCHANTS = ["Amazon", "Uber", "Starbucks", "Netflix", "Shell", "Target"]
 CATEGORIES = ["Shopping", "Travel", "Food", "Bills", "Auto", "Shopping"]

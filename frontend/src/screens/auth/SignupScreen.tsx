@@ -9,14 +9,16 @@ const SignupScreen = ({ navigation }: any) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleSignup = async () => {
+    setErrorMsg('');
     if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all required fields.');
+      setErrorMsg('Please fill in all required fields.');
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match.');
+      setErrorMsg('Passwords do not match.');
       return;
     }
     
@@ -32,7 +34,12 @@ const SignupScreen = ({ navigation }: any) => {
         { text: 'OK', onPress: () => navigation.navigate('Login') }
       ]);
     } catch (e: any) {
-      Alert.alert('Signup Failed', e.response?.data?.detail || 'An error occurred.');
+      const msg = e.response?.data?.detail || 'An error occurred during signup.';
+      if (Array.isArray(msg)) {
+        setErrorMsg(msg[0]?.msg || 'Validation Error');
+      } else {
+        setErrorMsg(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -85,6 +92,8 @@ const SignupScreen = ({ navigation }: any) => {
           secureTextEntry
         />
       </View>
+
+      {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
 
       <TouchableOpacity style={styles.button} onPress={handleSignup} disabled={loading}>
         {loading ? <ActivityIndicator color="#0F172A" /> : <Text style={styles.buttonText}>Sign Up</Text>}
@@ -143,6 +152,12 @@ const styles = StyleSheet.create({
   linkText: {
     color: '#00D09E',
     textAlign: 'center',
+  },
+  errorText: {
+    color: '#EF4444',
+    textAlign: 'center',
+    marginBottom: 15,
+    fontSize: 14,
   }
 });
 

@@ -2,9 +2,8 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-// For Android emulator fetching local server, use 10.0.2.2. For iOS emulator, use localhost.
-// Alternatively, hardcode your local IP address for physical devices.
-const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+// Use environment variable if available, else fallback to localhost
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -11,48 +11,75 @@ from models.advanced import BlacklistedToken
 from schemas.user import UserCreate, UserOut, Token, UserBase
 from api.deps import get_current_user, oauth2_scheme
 
+import logging
+
+from core.rate_limit import limiter
+
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 @router.post("/signup", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def signup(user_in: UserCreate, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == user_in.email).first()
-    if user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    hashed_password = get_password_hash(user_in.password)
-    db_user = User(
-        name=user_in.name,
-        email=user_in.email,
-        phone=user_in.phone,
-        hashed_password=hashed_password
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+@limiter.limit("5/minute")
+def signup(request: Request, user_in: UserCreate, db: Session = Depends(get_db)):
+    try:
+        logger.info(f"Signup attempt for email: {user_in.email}")
+        user = db.query(User).filter(User.email == user_in.email).first()
+        if user:
+            logger.warning(f"Signup failed: Email already registered ({user_in.email})")
+            raise HTTPException(status_code=400, detail="Email already registered")
+        
+        hashed_password = get_password_hash(user_in.password)
+        db_user = User(
+            name=user_in.name,
+            email=user_in.email,
+            phone=user_in.phone,
+            hashed_password=hashed_password
+        )
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        logger.info(f"User registered successfully: {db_user.email}")
+        return db_user
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Signup error for {user_in.email}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
 
 @router.post("/login", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
+@limiter.limit("10/minute")
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    try:
+        logger.info(f"Login attempt for user: {form_data.username}")
+        user = db.query(User).filter(User.email == form_data.username).first()
+        if not user or not verify_password(form_data.password, user.hashed_password):
+            logger.warning(f"Login failed: Incorrect credentials for {form_data.username}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            subject=user.id, expires_delta=access_token_expires
         )
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        subject=user.id, expires_delta=access_token_expires
-    )
-    refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    refresh_token = create_refresh_token(
-        subject=user.id, expires_delta=refresh_token_expires
-    )
-    
-    user.hashed_refresh_token = get_password_hash(refresh_token)
-    db.commit()
+        refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        refresh_token = create_refresh_token(
+            subject=user.id, expires_delta=refresh_token_expires
+        )
+        
+        user.hashed_refresh_token = get_password_hash(refresh_token)
+        db.commit()
 
-    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+        logger.info(f"Login successful for user: {form_data.username}")
+        return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Login error for {form_data.username}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
 
 from pydantic import BaseModel
 class RefreshTokenReq(BaseModel):

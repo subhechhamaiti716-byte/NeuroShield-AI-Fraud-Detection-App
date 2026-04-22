@@ -7,11 +7,13 @@ const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const { login } = useContext(AuthContext);
 
   const handleLogin = async () => {
+    setErrorMsg('');
     if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password.');
+      setErrorMsg('Please enter both email and password.');
       return;
     }
     
@@ -34,7 +36,13 @@ const LoginScreen = ({ navigation }: any) => {
       
       login(access_token, userRes.data);
     } catch (e: any) {
-      Alert.alert('Login Failed', e.response?.data?.detail || 'An error occurred.');
+      const msg = e.response?.data?.detail || 'An error occurred during login.';
+      // Handle FastAPI validation error array
+      if (Array.isArray(msg)) {
+        setErrorMsg(msg[0]?.msg || 'Validation Error');
+      } else {
+        setErrorMsg(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -64,6 +72,8 @@ const LoginScreen = ({ navigation }: any) => {
           secureTextEntry
         />
       </View>
+
+      {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
 
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         {loading ? <ActivityIndicator color="#0F172A" /> : <Text style={styles.buttonText}>Login</Text>}
@@ -122,6 +132,12 @@ const styles = StyleSheet.create({
   linkText: {
     color: '#00D09E',
     textAlign: 'center',
+  },
+  errorText: {
+    color: '#EF4444',
+    textAlign: 'center',
+    marginBottom: 15,
+    fontSize: 14,
   }
 });
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -9,7 +9,13 @@ from models.advanced import FraudLog, UserBehaviorProfile
 from schemas.transaction import TransactionCreate, TransactionOut, FraudFeedback
 from api.deps import get_current_user
 from ml.fraud_model import fraud_model
-from websockets.alerts import manager
+from ws_manager.alerts import manager
+
+import logging
+
+from core.rate_limit import limiter
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -22,15 +28,20 @@ def get_or_create_profile(user_id: int, db: Session):
         db.refresh(profile)
     return profile
 
-@router.post("/add", response_model=TransactionOut)
+@router.post("/add", response_model=TransactionOut, status_code=status.HTTP_201_CREATED)
+@limiter.limit("20/minute")
 async def add_transaction(
+    request: Request,
     tx_in: TransactionCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Check balance
-    if current_user.balance < tx_in.amount:
-        raise HTTPException(status_code=400, detail="Insufficient funds")
+    try:
+        logger.info(f"Adding transaction for user {current_user.id}: {tx_in.amount} {tx_in.merchant}")
+        # Check balance
+        if current_user.balance < tx_in.amount:
+            logger.warning(f"Transaction failed: Insufficient funds for user {current_user.id}")
+            raise HTTPException(status_code=400, detail="Insufficient funds")
 
     # Get user profile for feature engineering
     profile = get_or_create_profile(current_user.id, db)
@@ -77,22 +88,30 @@ async def add_transaction(
     response_data["risk_level"] = ml_result["risk_level"]
     response_data["reasons"] = ml_result["reasons"]
 
-    # Trigger WebSocket alert if suspicious
-    if ml_result["is_suspicious"]:
-        await manager.send_alert(
-            user_id=str(current_user.id),
-            message={
-                "type": "FRAUD_ALERT",
-                "transaction_id": db_tx.id,
-                "amount": db_tx.amount,
-                "merchant": db_tx.merchant,
-                "risk_level": ml_result["risk_level"],
-                "reasons": ml_result["reasons"],
-                "message": "Suspicious transaction detected!"
-            }
-        )
+        # Trigger WebSocket alert if suspicious
+        if ml_result["is_suspicious"]:
+            logger.warning(f"Suspicious transaction detected for user {current_user.id}: {tx_in.amount} at {tx_in.merchant}. Risk: {ml_result['risk_level']}")
+            await manager.send_alert(
+                user_id=str(current_user.id),
+                message={
+                    "type": "FRAUD_ALERT",
+                    "transaction_id": db_tx.id,
+                    "amount": db_tx.amount,
+                    "merchant": db_tx.merchant,
+                    "risk_level": ml_result["risk_level"],
+                    "reasons": ml_result["reasons"],
+                    "message": "Suspicious transaction detected!"
+                }
+            )
 
-    return response_data
+        logger.info(f"Transaction added successfully for user {current_user.id}: ID {db_tx.id}")
+        return response_data
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error adding transaction for user {current_user.id}: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Internal server error while adding transaction")
 
 @router.get("/", response_model=List[TransactionOut])
 def get_transactions(

@@ -7,21 +7,30 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import asyncio
 
 from core.database import engine, Base
+from core.rate_limit import limiter
 from api import auth, transactions, payments
-from websockets.alerts import manager
+from ws_manager.alerts import manager
 from services.bank_sync import sync_bank_transactions
 
-limiter = Limiter(key_func=get_remote_address)
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Import models before creating tables
+import models
 
 # Create DB schema
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="NeuroShield API", description="AI-powered fraud detection banking app")
 
+from core.config import settings
+origins = [origin.strip() for origin in settings.FRONTEND_URL.split(',')]
+
 # CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Since mobile apps usually need permissive CORS locally, or we set exact app schemas.
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,6 +47,18 @@ async def add_security_headers(request: Request, call_next):
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    # Do not log stack trace in production response, just return a clean message
+    logger.error(f"Global exception: {str(exc)}")
+    return JSONResponse(
+        status_code=500,
+        content={"status": "error", "message": "An internal server error occurred."}
+    )
+
 
 scheduler = AsyncIOScheduler()
 
@@ -63,9 +84,6 @@ async def token_cleanup_job():
     finally:
         db.close()
 
-import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def startup_event():
@@ -107,3 +125,26 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 @app.get("/")
 def root():
     return {"message": "Welcome to NeuroShield API"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+@app.get("/test-db")
+def test_db():
+    from sqlalchemy import text
+    from core.database import SessionLocal
+    db = SessionLocal()
+    try:
+        db.execute(text("SELECT 1"))
+        return {"status": "success", "message": "Database connection works"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    finally:
+        db.close()
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
