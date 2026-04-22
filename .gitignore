@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+backend/venv/
+backend/__pycache__/
+
+# Node
+node_modules/
+frontend/node_modules/
+.expo/
+frontend/.expo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+backend/.env
+frontend/.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific
+backend/ml/models/*.pkl
+!backend/ml/models/isolation_forest_fallback.pkl
