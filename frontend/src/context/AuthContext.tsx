@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import { storage } from '../utils/storage';
 import apiClient from '../api/axios';
 
 type User = {
@@ -31,14 +31,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUser = async () => {
     try {
-      const token = await SecureStore.getItemAsync('token');
+      const token = await storage.getItem('token');
       if (token) {
         const response = await apiClient.get('/auth/me');
         setUser(response.data);
       }
     } catch (e) {
       console.error('Failed to fetch user', e);
-      await SecureStore.deleteItemAsync('token');
+      await storage.deleteItem('token');
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -50,12 +50,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (token: string, userData: User) => {
-    await SecureStore.setItemAsync('token', token);
+    await storage.setItem('token', token);
     setUser(userData);
   };
 
   const logout = async () => {
-    await SecureStore.deleteItemAsync('token');
+    await storage.deleteItem('token');
     setUser(null);
   };
 

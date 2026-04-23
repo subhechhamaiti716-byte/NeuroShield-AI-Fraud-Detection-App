@@ -1,8 +1,6 @@
 import { useEffect, useContext, useRef } from 'react';
 import { Alert, Platform } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
-import * as SecureStore from 'expo-secure-store';
-
 const WS_URL = process.env.EXPO_PUBLIC_WS_URL || 'ws://127.0.0.1:8000/ws/alerts';
 
 export const useWebSockets = () => {

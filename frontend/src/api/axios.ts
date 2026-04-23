@@ -1,6 +1,5 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
+import { storage } from '../utils/storage';
 
 // Use environment variable if available, else fallback to localhost
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://127.0.0.1:8000';
@@ -10,7 +9,7 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use(async (config) => {
-  const token = await SecureStore.getItemAsync('token');
+  const token = await storage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
