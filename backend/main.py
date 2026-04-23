@@ -24,14 +24,11 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="NeuroShield API", description="AI-powered fraud detection banking app")
 
-from core.config import settings
-origins = [origin.strip() for origin in settings.FRONTEND_URL.split(',')]
-
-# CORS setup
+# CORS setup - Allowing all for portfolio simplicity
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
