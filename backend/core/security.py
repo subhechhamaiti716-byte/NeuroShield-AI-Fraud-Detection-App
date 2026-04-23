@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any, Union
 import bcrypt
+import hashlib
 from jose import jwt
 import uuid
 from core.config import settings
@@ -16,6 +17,14 @@ def get_password_hash(password: str) -> str:
         password.encode("utf-8"),
         bcrypt.gensalt()
     ).decode("utf-8")
+
+def hash_token(token: str) -> str:
+    """Hash a long token (like refresh JWT) using SHA-256 since bcrypt has 72-byte limit."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+def verify_token_hash(token: str, hashed: str) -> bool:
+    """Verify a token against its SHA-256 hash."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest() == hashed
 
 def create_access_token(subject: Union[str, Any], expires_delta: timedelta = None) -> str:
     if expires_delta:

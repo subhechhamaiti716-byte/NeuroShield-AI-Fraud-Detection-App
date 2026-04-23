@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 
 from core.database import get_db
-from core.security import verify_password, get_password_hash, create_access_token, create_refresh_token
+from core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, hash_token, verify_token_hash
 from core.config import settings
 from models.user import User
 from models.advanced import BlacklistedToken
@@ -70,7 +70,7 @@ def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db
             subject=user.id, expires_delta=refresh_token_expires
         )
         
-        user.hashed_refresh_token = get_password_hash(refresh_token)
+        user.hashed_refresh_token = hash_token(refresh_token)
         db.commit()
 
         logger.info(f"Login successful for user: {form_data.username}")
@@ -98,7 +98,7 @@ def refresh_token(req: RefreshTokenReq, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid token")
         
     user = db.query(User).filter(User.id == int(user_id)).first()
-    if not user or not user.hashed_refresh_token or not verify_password(req.refresh_token, user.hashed_refresh_token):
+    if not user or not user.hashed_refresh_token or not verify_token_hash(req.refresh_token, user.hashed_refresh_token):
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
         
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
