@@ -43,50 +43,50 @@ async def add_transaction(
             logger.warning(f"Transaction failed: Insufficient funds for user {current_user.id}")
             raise HTTPException(status_code=400, detail="Insufficient funds")
 
-    # Get user profile for feature engineering
-    profile = get_or_create_profile(current_user.id, db)
+        # Get user profile for feature engineering
+        profile = get_or_create_profile(current_user.id, db)
 
-    # Run advanced fraud detection
-    ml_result = fraud_model.evaluate(tx_in.model_dump(), profile)
+        # Run advanced fraud detection
+        ml_result = fraud_model.evaluate(tx_in.model_dump(), profile)
 
-    # Save transaction to DB
-    db_tx = Transaction(
-        user_id=current_user.id,
-        amount=tx_in.amount,
-        category=tx_in.category,
-        merchant=tx_in.merchant,
-        location=tx_in.location,
-        notes=tx_in.notes,
-        source=tx_in.source,
-        fraud_score=ml_result["risk_score"],
-        is_suspicious=ml_result["is_suspicious"]
-    )
-    db.add(db_tx)
-    db.commit()
-    db.refresh(db_tx)
-
-    # If suspicious, log to FraudLogs
-    if ml_result["is_suspicious"]:
-        fraud_log = FraudLog(
-            transaction_id=db_tx.id,
+        # Save transaction to DB
+        db_tx = Transaction(
             user_id=current_user.id,
-            risk_score=ml_result["risk_score"],
-            risk_level=ml_result["risk_level"],
-            reasons=ml_result["reasons"]
+            amount=tx_in.amount,
+            category=tx_in.category,
+            merchant=tx_in.merchant,
+            location=tx_in.location,
+            notes=tx_in.notes,
+            source=tx_in.source,
+            fraud_score=ml_result["risk_score"],
+            is_suspicious=ml_result["is_suspicious"]
         )
-        db.add(fraud_log)
-    else:
-        # Update user profile if normal (Simple Online Update)
-        profile.avg_spending = ((profile.avg_spending * profile.transaction_count) + tx_in.amount) / (profile.transaction_count + 1)
-        profile.transaction_count += 1
-        current_user.balance -= tx_in.amount
-        
-    db.commit()
+        db.add(db_tx)
+        db.commit()
+        db.refresh(db_tx)
 
-    # Create response with the correct schema
-    response_data = db_tx.__dict__.copy()
-    response_data["risk_level"] = ml_result["risk_level"]
-    response_data["reasons"] = ml_result["reasons"]
+        # If suspicious, log to FraudLogs
+        if ml_result["is_suspicious"]:
+            fraud_log = FraudLog(
+                transaction_id=db_tx.id,
+                user_id=current_user.id,
+                risk_score=ml_result["risk_score"],
+                risk_level=ml_result["risk_level"],
+                reasons=ml_result["reasons"]
+            )
+            db.add(fraud_log)
+        else:
+            # Update user profile if normal (Simple Online Update)
+            profile.avg_spending = ((profile.avg_spending * profile.transaction_count) + tx_in.amount) / (profile.transaction_count + 1)
+            profile.transaction_count += 1
+            current_user.balance -= tx_in.amount
+            
+        db.commit()
+
+        # Create response with the correct schema
+        response_data = db_tx.__dict__.copy()
+        response_data["risk_level"] = ml_result["risk_level"]
+        response_data["reasons"] = ml_result["reasons"]
 
         # Trigger WebSocket alert if suspicious
         if ml_result["is_suspicious"]:
