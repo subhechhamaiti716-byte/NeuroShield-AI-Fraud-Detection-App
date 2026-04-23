@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 # Import models before creating tables
 import models
 
-# Create DB schema
-Base.metadata.create_all(bind=engine)
+# DB schema creation will happen in startup_event
+
 
 app = FastAPI(title="NeuroShield API", description="AI-powered fraud detection banking app")
 
@@ -85,6 +85,13 @@ async def token_cleanup_job():
 @app.on_event("startup")
 async def startup_event():
     from core.config import settings
+    logger.info("Initializing database...")
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database initialized successfully.")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {str(e)}")
+
     logger.info("Initializing APScheduler jobs...")
     scheduler.add_job(bank_sync_job, 'interval', minutes=settings.SYNC_INTERVAL_MINUTES, id="bank_sync_internal", replace_existing=True, max_instances=1)
     scheduler.add_job(ml_retraining_job, 'interval', hours=settings.RETRAIN_INTERVAL_HOURS, id="ml_retrain_daily", replace_existing=True, max_instances=1) 
