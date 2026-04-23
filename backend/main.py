@@ -85,12 +85,16 @@ async def token_cleanup_job():
 @app.on_event("startup")
 async def startup_event():
     from core.config import settings
-    logger.info("Initializing database...")
-    try:
-        Base.metadata.create_all(bind=engine)
-        logger.info("Database initialized successfully.")
-    except Exception as e:
-        logger.error(f"Failed to initialize database: {str(e)}")
+    logger.info("Initializing database in background...")
+    def init_db():
+        try:
+            Base.metadata.create_all(bind=engine)
+            logger.info("Database initialized successfully.")
+        except Exception as e:
+            logger.error(f"Failed to initialize database: {str(e)}")
+    
+    # Run in background to prevent startup hang
+    asyncio.create_task(asyncio.to_thread(init_db))
 
     logger.info("Initializing APScheduler jobs...")
     scheduler.add_job(bank_sync_job, 'interval', minutes=settings.SYNC_INTERVAL_MINUTES, id="bank_sync_internal", replace_existing=True, max_instances=1)
