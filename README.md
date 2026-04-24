@@ -6,11 +6,11 @@ NeuroShield is a production-grade fintech application designed to detect and pre
 
 - **Real-Time Fraud Detection**: Uses Isolation Forest (Scikit-learn) to score every transaction against user behavior profiles.
 - **Fintech Dark Mode UI**: Premium mobile interface built with React Native and Expo.
-- **Dynamic Model Management**: Admin APIs for model versioning and one-click rollbacks.
-- **Background Automation**: Automated bank synchronization and model retraining via APScheduler.
-- **Secure Auth**: JWT-based authentication with token blacklisting and role-based access.
+- **Real-World Identity Verification**: Advanced signup validation using live DNS MX record checks (email) and geographic layout verification (phone).
+- **Integrated Payments**: Razorpay integration with secure signature verification.
+- **Plaid Bank Connection**: Securely link real bank accounts to fetch live balances (Open Banking).
 - **Real-Time Alerts**: WebSocket-based notifications for suspicious activities.
-- **Integrated Payments**: Razorpay integration with secure webhook verification.
+- **Self-Healing Schema**: Automated database migrations for seamless feature updates.
 
 ## 🛠️ Tech Stack
 
@@ -57,8 +57,8 @@ npx expo start
 
 ## 🌐 Live Demo
 *(Replace with your actual deployed link)*
-- **Backend API**: [https://neuroshield-api.onrender.com](https://neuroshield-api.onrender.com)
-- **Frontend App**: [https://neuroshield.vercel.app](https://neuroshield.vercel.app)
+- **Backend API**: [https://neuroshield-ai-fraud-detection-app.onrender.com](https://neuroshield-ai-fraud-detection-app.onrender.com)
+- **Frontend App**: [https://frontend-one-chi-32.vercel.app](https://frontend-one-chi-32.vercel.app)
 
 ## 🚀 Deployment Guide
 
