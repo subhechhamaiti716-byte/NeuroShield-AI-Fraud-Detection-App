@@ -87,8 +87,18 @@ async def startup_event():
     from core.config import settings
     logger.info("Initializing database in background...")
     def init_db():
+        from sqlalchemy import text
         try:
             Base.metadata.create_all(bind=engine)
+            # Auto-migration for new Plaid columns if table already existed
+            with engine.connect() as conn:
+                try:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN plaid_access_token VARCHAR"))
+                except Exception: pass
+                try:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN plaid_item_id VARCHAR"))
+                except Exception: pass
+                conn.commit()
             logger.info("Database initialized successfully.")
         except Exception as e:
             logger.error(f"Failed to initialize database: {str(e)}")
