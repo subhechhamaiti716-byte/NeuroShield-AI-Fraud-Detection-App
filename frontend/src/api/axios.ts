@@ -6,7 +6,7 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL || (isProd ? 'https://neuroshie
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 15000, // 15 seconds — prevents infinite loading if backend is down
+  timeout: 60000, // 60 seconds — allows Render free tier to wake up from sleep
 });
 
 apiClient.interceptors.request.use(async (config) => {
