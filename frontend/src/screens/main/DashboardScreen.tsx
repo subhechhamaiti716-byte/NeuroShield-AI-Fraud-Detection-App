@@ -11,6 +11,12 @@ const DashboardScreen = ({ navigation }: any) => {
 
   const loadData = async () => {
     setRefreshing(true);
+    try {
+      // Try to sync live balance from Plaid first
+      await apiClient.get('/bank/balance');
+    } catch (e) {
+      // Ignore if bank not linked yet
+    }
     await fetchUser();
     try {
       const res = await apiClient.get('/transactions/?limit=5');
@@ -62,6 +68,11 @@ const DashboardScreen = ({ navigation }: any) => {
       <View style={styles.balanceCard}>
         <Text style={styles.balanceLabel}>Total Balance</Text>
         <Text style={styles.balanceAmount}>${user?.balance?.toFixed(2) || '0.00'}</Text>
+        {user?.balance === 0 && (
+          <Text style={styles.balanceWarning}>
+            ⚠️ Account starting at zero. Link your bank to sync live funds.
+          </Text>
+        )}
         <View style={styles.balanceRow}>
           <View style={styles.riskIndicator}>
             <Ionicons name="shield-checkmark" size={16} color="#00D09E" />
@@ -110,6 +121,7 @@ const styles = StyleSheet.create({
   balanceCard: { backgroundColor: '#1E293B', padding: 20, borderRadius: 16, marginBottom: 30, borderWidth: 1, borderColor: '#334155' },
   balanceLabel: { color: '#94A3B8', fontSize: 16, marginBottom: 8 },
   balanceAmount: { color: '#00D09E', fontSize: 40, fontWeight: 'bold', marginBottom: 15 },
+  balanceWarning: { color: '#FCD34D', fontSize: 12, marginBottom: 15, fontWeight: '600' },
   riskIndicator: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#064E3B', padding: 8, borderRadius: 8 },
   riskText: { color: '#00D09E', marginLeft: 6, fontSize: 12, fontWeight: '600' },
   balanceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

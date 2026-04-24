@@ -11,7 +11,7 @@ class User(Base):
     phone = Column(String, unique=True, index=True)
     hashed_password = Column(String, nullable=False)
     hashed_refresh_token = Column(String, nullable=True) # New for security upgrade
-    balance = Column(Float, default=10000.0) # Mock initial balance
+    balance = Column(Float, default=0.0) # Real starting balance is 0.0
     plaid_access_token = Column(String, nullable=True)
     plaid_item_id = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
