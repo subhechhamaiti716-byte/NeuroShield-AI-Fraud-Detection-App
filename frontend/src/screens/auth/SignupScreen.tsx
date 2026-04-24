@@ -34,11 +34,17 @@ const SignupScreen = ({ navigation }: any) => {
         { text: 'OK', onPress: () => navigation.navigate('Login') }
       ]);
     } catch (e: any) {
-      const msg = e.response?.data?.detail || 'An error occurred during signup.';
-      if (Array.isArray(msg)) {
-        setErrorMsg(msg[0]?.msg || 'Validation Error');
+      if (e.code === 'ECONNABORTED' || e.message?.includes('timeout')) {
+        setErrorMsg('Request timed out. Server tak pahunch nahi pa raha. Please check if backend is running.');
+      } else if (!e.response) {
+        setErrorMsg('Network error: Server se connect nahi ho pa raha. Backend start hai?');
       } else {
-        setErrorMsg(msg);
+        const msg = e.response?.data?.detail || 'An error occurred during signup.';
+        if (Array.isArray(msg)) {
+          setErrorMsg(msg[0]?.msg || 'Validation Error');
+        } else {
+          setErrorMsg(msg);
+        }
       }
     } finally {
       setLoading(false);

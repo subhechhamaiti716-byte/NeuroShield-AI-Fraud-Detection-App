@@ -1,18 +1,25 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any, Union
-from passlib.context import CryptContext
+import bcrypt
 import hashlib
 from jose import jwt
 import uuid
 from core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    # Truncate to 72 characters to prevent bcrypt 72 byte limit error
+    password_bytes = plain_password[:72].encode('utf-8')
+    hashed_bytes = hashed_password.encode('utf-8')
+    try:
+        return bcrypt.checkpw(password_bytes, hashed_bytes)
+    except Exception:
+        return False
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    # Truncate to 72 characters to prevent bcrypt 72 byte limit error
+    password_bytes = password[:72].encode('utf-8')
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password_bytes, salt).decode('utf-8')
 
 def hash_token(token: str) -> str:
     """Hash a long token (like refresh JWT) using SHA-256 since bcrypt has 72-byte limit."""

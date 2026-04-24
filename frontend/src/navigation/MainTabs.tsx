@@ -12,6 +12,7 @@ import TransactionsScreen from '../screens/main/TransactionsScreen';
 import AnalyticsScreen from '../screens/main/AnalyticsScreen';
 import AddTransactionScreen from '../screens/main/AddTransactionScreen';
 import FraudAlertScreen from '../screens/main/FraudAlertScreen';
+import DepositFundsScreen from '../screens/main/DepositFundsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -108,6 +109,11 @@ const MainTabs = () => {
         name="AddTransaction" 
         component={AddTransactionScreen} 
         options={{ presentation: 'modal', headerShown: true, title: 'Add Transaction', headerStyle: { backgroundColor: '#1E293B' }, headerTintColor: '#F8FAFC' }} 
+      />
+      <Stack.Screen 
+        name="DepositFunds" 
+        component={DepositFundsScreen} 
+        options={{ presentation: 'modal', headerShown: true, title: 'Add Funds', headerStyle: { backgroundColor: '#1E293B' }, headerTintColor: '#F8FAFC' }} 
       />
       <Stack.Screen 
         name="FraudAlert" 
