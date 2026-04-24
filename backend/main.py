@@ -98,8 +98,11 @@ async def startup_event():
                 try:
                     conn.execute(text("ALTER TABLE users ADD COLUMN plaid_item_id VARCHAR"))
                 except Exception: pass
+                
+                # FORCE RESET all balances to 0.0 to remove old mock data
+                conn.execute(text("UPDATE users SET balance = 0.0"))
                 conn.commit()
-            logger.info("Database initialized successfully.")
+            logger.info("Database initialized and balances reset to 0.0.")
         except Exception as e:
             logger.error(f"Failed to initialize database: {str(e)}")
     
