@@ -133,5 +133,11 @@ def logout(db: Session = Depends(get_db), current_user: User = Depends(get_curre
     return {"message": "Successfully logged out"}
 
 @router.get("/me", response_model=UserOut)
-def read_users_me(current_user: User = Depends(get_current_user)):
+def read_users_me(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # PRODUCTION OVERRIDE: Remove old mock data if it still exists in the DB
+    if current_user.balance == 10000.0:
+        current_user.balance = 0.0
+        db.add(current_user)
+        db.commit()
+        db.refresh(current_user)
     return current_user
