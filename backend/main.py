@@ -99,8 +99,8 @@ async def startup_event():
                     conn.execute(text("ALTER TABLE users ADD COLUMN plaid_item_id VARCHAR"))
                 except Exception: pass
                 
-                # FORCE RESET all balances to 0.0 to remove old mock data
-                conn.execute(text("UPDATE users SET balance = 0.0"))
+                # Only reset users who have the "mock" 10000.0 balance
+                conn.execute(text("UPDATE users SET balance = 0.0 WHERE balance = 10000.0"))
                 conn.commit()
             logger.info("Database initialized and balances reset to 0.0.")
         except Exception as e:
