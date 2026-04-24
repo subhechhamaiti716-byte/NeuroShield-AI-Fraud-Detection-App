@@ -1,11 +1,24 @@
 from typing import Optional
 import re
 from pydantic import BaseModel, EmailStr, field_validator
+from email_validator import validate_email, EmailNotValidError
+import phonenumbers
+from pydantic import BaseModel, EmailStr, field_validator
 
 class UserBase(BaseModel):
     name: str
     email: EmailStr
     phone: Optional[str] = None
+
+    @field_validator('email')
+    @classmethod
+    def validate_real_email(cls, v: str) -> str:
+        try:
+            # check_deliverability=True performs DNS checks to see if domain actually exists and accepts mail
+            valid = validate_email(v, check_deliverability=True)
+            return valid.normalized
+        except EmailNotValidError as e:
+            raise ValueError(f"Invalid email: {str(e)}")
 
     @field_validator('phone')
     @classmethod
@@ -13,6 +26,14 @@ class UserBase(BaseModel):
         if v is not None:
             if not re.fullmatch(r'\d{10}', v):
                 raise ValueError('Phone number must be exactly 10 digits')
+            # Check if it maps to a real-world active geography format (assuming India/US for 10 digits)
+            try:
+                parsed_in = phonenumbers.parse(v, "IN")
+                parsed_us = phonenumbers.parse(v, "US")
+                if not phonenumbers.is_valid_number(parsed_in) and not phonenumbers.is_valid_number(parsed_us):
+                    raise ValueError('Phone number does not match any valid real-world area code.')
+            except phonenumbers.NumberParseException:
+                raise ValueError('Could not parse phone number geography.')
         return v
 
 
