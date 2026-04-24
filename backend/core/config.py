@@ -23,6 +23,13 @@ class Settings(BaseSettings):
     SYNC_INTERVAL_MINUTES: int = int(os.getenv("SYNC_INTERVAL_MINUTES", "5"))
     RETRAIN_INTERVAL_HOURS: int = int(os.getenv("RETRAIN_INTERVAL_HOURS", "24"))
 
+    # Plaid
+    PLAID_CLIENT_ID: str = os.getenv("PLAID_CLIENT_ID", "")
+    PLAID_SECRET: str = os.getenv("PLAID_SECRET", "")
+    PLAID_ENV: str = os.getenv("PLAID_ENV", "sandbox")
+    PLAID_PRODUCTS: str = os.getenv("PLAID_PRODUCTS", "auth,transactions,balance")
+    PLAID_COUNTRY_CODES: str = os.getenv("PLAID_COUNTRY_CODES", "US,IN")
+
     class Config:
         env_file = ".env"
 

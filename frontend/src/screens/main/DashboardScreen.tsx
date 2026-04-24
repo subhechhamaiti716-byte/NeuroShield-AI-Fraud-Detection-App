@@ -72,6 +72,13 @@ const DashboardScreen = ({ navigation }: any) => {
             <Text style={styles.depositBtnText}>Deposit</Text>
           </TouchableOpacity>
         </View>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('BankLink')} 
+          style={styles.linkBankBtn}
+        >
+          <Ionicons name="link-outline" size={16} color="#94A3B8" />
+          <Text style={styles.linkBankBtnText}>Link Real Bank Account</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.actionRow}>
@@ -108,6 +115,8 @@ const styles = StyleSheet.create({
   balanceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   depositBtn: { flexDirection: 'row', backgroundColor: '#00D09E', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
   depositBtnText: { color: '#1E293B', fontWeight: 'bold', marginLeft: 6 },
+  linkBankBtn: { flexDirection: 'row', alignItems: 'center', marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: '#334155' },
+  linkBankBtnText: { color: '#94A3B8', fontSize: 14, marginLeft: 8 },
   actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#F8FAFC' },
   addButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#00D09E', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },

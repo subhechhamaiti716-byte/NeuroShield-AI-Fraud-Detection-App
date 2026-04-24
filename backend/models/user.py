@@ -12,6 +12,8 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     hashed_refresh_token = Column(String, nullable=True) # New for security upgrade
     balance = Column(Float, default=10000.0) # Mock initial balance
+    plaid_access_token = Column(String, nullable=True)
+    plaid_item_id = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

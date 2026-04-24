@@ -113,9 +113,10 @@ async def shutdown_event():
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(transactions.router, prefix="/transactions", tags=["Transactions"])
 app.include_router(payments.router, prefix="/payment", tags=["Payments"])
-from api import analytics, models_admin
+from api import analytics, models_admin, bank
 app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 app.include_router(models_admin.router, prefix="/admin/models", tags=["Model Admin"])
+app.include_router(bank.router, prefix="/bank", tags=["Bank Link"])
 
 # WebSocket route for alerts
 @app.websocket("/ws/alerts/{user_id}")
