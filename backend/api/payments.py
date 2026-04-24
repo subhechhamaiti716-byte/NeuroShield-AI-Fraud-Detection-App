@@ -28,7 +28,7 @@ def create_payment_order(amount: float, current_user: User = Depends(get_current
     
     order_data = {
         "amount": amount_in_paise,
-        "currency": "USD", # or INR
+        "currency": "INR", # Support for Rupees
         "receipt": f"receipt_{current_user.id}_{datetime.now().timestamp()}",
         "payment_capture": 1
     }

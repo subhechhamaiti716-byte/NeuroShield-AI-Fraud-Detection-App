@@ -47,7 +47,7 @@ const DashboardScreen = ({ navigation }: any) => {
         </View>
       </View>
       <View style={styles.txRight}>
-        <Text style={styles.txAmount}>${item.amount.toFixed(2)}</Text>
+        <Text style={styles.txAmount}>₹{item.amount.toFixed(2)}</Text>
         {item.is_suspicious && <Text style={styles.txRisk}>High Risk</Text>}
       </View>
     </View>
@@ -67,7 +67,7 @@ const DashboardScreen = ({ navigation }: any) => {
 
       <View style={styles.balanceCard}>
         <Text style={styles.balanceLabel}>Total Balance</Text>
-        <Text style={styles.balanceAmount}>${user?.balance?.toFixed(2) || '0.00'}</Text>
+        <Text style={styles.balanceAmount}>₹{user?.balance?.toFixed(2) || '0.00'}</Text>
         {user?.balance === 0 && (
           <Text style={styles.balanceWarning}>
             ⚠️ Account starting at zero. Link your bank to sync live funds.

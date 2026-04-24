@@ -122,7 +122,7 @@ const DepositFundsScreen = ({ navigation }: any) => {
       <Text style={styles.subtitle}>Add money to your NeuroShield account securely via Razorpay.</Text>
 
       <View style={styles.inputContainer}>
-        <Ionicons name="logo-usd" size={24} color="#00D09E" style={styles.currencyIcon} />
+        <Text style={{ fontSize: 24, color: '#00D09E', marginRight: 10 }}>₹</Text>
         <TextInput
           style={styles.input}
           placeholder="0.00"

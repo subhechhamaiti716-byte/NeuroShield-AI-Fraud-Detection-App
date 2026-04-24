@@ -46,14 +46,17 @@ const AddTransactionScreen = ({ navigation }: any) => {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.label}>Amount</Text>
-      <TextInput
-        style={styles.inputWrapper}
-        placeholder="0.00"
-        placeholderTextColor="#64748B"
-        keyboardType="decimal-pad"
-        value={amount}
-        onChangeText={setAmount}
-      />
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Text style={{ fontSize: 24, color: '#00D09E', marginRight: 10 }}>₹</Text>
+        <TextInput
+          style={[styles.inputWrapper, { flex: 1 }]}
+          placeholder="0.00"
+          placeholderTextColor="#64748B"
+          keyboardType="decimal-pad"
+          value={amount}
+          onChangeText={setAmount}
+        />
+      </View>
       
       <Text style={styles.label}>Merchant</Text>
       <TextInput
