@@ -57,7 +57,9 @@ const MainTabs = () => {
   const connectWebSocket = () => {
     if (!user) return;
 
-    const baseUrl = process.env.EXPO_PUBLIC_WS_URL || 'ws://127.0.0.1:8000/ws/alerts';
+    const isProd = process.env.NODE_ENV === 'production';
+    const fallbackWs = isProd ? 'wss://neuroshield-ai-fraud-detection-app.onrender.com/ws/alerts' : 'ws://127.0.0.1:8000/ws/alerts';
+    const baseUrl = process.env.EXPO_PUBLIC_WS_URL || fallbackWs;
     const wsUrl = `${baseUrl}/${user.id}`;
     const ws = new WebSocket(wsUrl);
 

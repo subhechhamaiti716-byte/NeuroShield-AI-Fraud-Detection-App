@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { storage } from '../utils/storage';
 
-// Use environment variable if available, else fallback to localhost
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+const isProd = process.env.NODE_ENV === 'production';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || (isProd ? 'https://neuroshield-ai-fraud-detection-app.onrender.com' : 'http://127.0.0.1:8000');
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
