@@ -40,11 +40,16 @@ const DepositFundsScreen = ({ navigation }: any) => {
 
     setLoading(true);
     try {
+      // 1. Fetch Razorpay Config (Key ID) from backend
+      const { data: config } = await apiClient.get('/payment/config');
+      const RAZORPAY_KEY_ID = config.razorpay_key_id;
+
+      // 2. Create the order
       const { data: orderData } = await apiClient.post(`/payment/create-order?amount=${numAmount}`);
       
       if (Platform.OS === 'web' && window.Razorpay) {
         const options = {
-          key: process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder', // Usually put in .env
+          key: RAZORPAY_KEY_ID, 
           amount: orderData.amount,
           currency: orderData.currency,
           name: 'NeuroShield Banking',

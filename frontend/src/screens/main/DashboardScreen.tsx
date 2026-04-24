@@ -83,13 +83,6 @@ const DashboardScreen = ({ navigation }: any) => {
             <Text style={styles.depositBtnText}>Deposit</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity 
-          onPress={() => navigation.navigate('BankLink')} 
-          style={styles.linkBankBtn}
-        >
-          <Ionicons name="link-outline" size={16} color="#94A3B8" />
-          <Text style={styles.linkBankBtnText}>Link Real Bank Account</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.actionRow}>

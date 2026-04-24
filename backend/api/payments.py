@@ -56,6 +56,10 @@ def create_payment_order(amount: float, current_user: User = Depends(get_current
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/config")
+def get_payment_config():
+    return {"razorpay_key_id": RAZORPAY_KEY_ID}
+
 @router.post("/verify")
 async def verify_payment(
     razorpay_order_id: str,
@@ -69,7 +73,6 @@ async def verify_payment(
         raise HTTPException(status_code=404, detail="Order not found")
 
     # Validate Signature
-    # hmac_sha256(order_id + "|" + payment_id, secret)
     msg = f"{razorpay_order_id}|{razorpay_payment_id}"
     generated_signature = hmac.new(
         key=RAZORPAY_KEY_SECRET.encode('utf-8'),
@@ -86,9 +89,15 @@ async def verify_payment(
     payment.payment_id = razorpay_payment_id
     payment.signature = razorpay_signature
     payment.status = "CAPTURED"
+    
+    # CRITICAL: Actually increase the user's balance
+    user = db.query(User).filter(User.id == payment.user_id).first()
+    if user:
+        user.balance += payment.amount
+        
     db.commit()
     
-    return {"status": "Payment Verified and Captured successfully"}
+    return {"status": "Payment Verified and Balance Updated successfully", "new_balance": user.balance if user else 0.0}
 
 @router.post("/webhook")
 async def razorpay_webhook(request: Request, db: Session = Depends(get_db)):
