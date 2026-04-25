@@ -75,21 +75,36 @@ const BankLinkScreen = ({ navigation }: any) => {
         // SIMULATION MODE
         const msg = !linkToken ? 'Simulation Mode: No Plaid keys found. Would you like to simulate a bank link with sample data and Fraud Alerts?' : 'Link Sandbox Bank account?';
         
-        Alert.alert('NeuroShield Simulation', msg, [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Simulate Link', onPress: async () => {
-                setLoading(true);
-                try {
-                    // Call a specialized simulation endpoint to populate data
-                    await apiClient.post('/bank/simulate_link');
-                    await fetchUser();
-                    Alert.alert('Success', 'Simulation Complete! Your dashboard has been populated with real-world scenarios.');
-                    navigation.goBack();
-                } catch(e) {
-                    Alert.alert('Error', 'Simulation failed. Please try again.');
-                } finally { setLoading(false); }
-            }}
-        ]);
+        if (Platform.OS === 'web') {
+            if (window.confirm(msg)) {
+                (async () => {
+                    setLoading(true);
+                    try {
+                        await apiClient.post('/bank/simulate_link');
+                        await fetchUser();
+                        window.alert('Success: Simulation Complete! Your dashboard has been populated with real-world scenarios.');
+                        navigation.goBack();
+                    } catch(e) {
+                        window.alert('Error: Simulation failed. Please try again.');
+                    } finally { setLoading(false); }
+                })();
+            }
+        } else {
+            Alert.alert('NeuroShield Simulation', msg, [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Simulate Link', onPress: async () => {
+                    setLoading(true);
+                    try {
+                        await apiClient.post('/bank/simulate_link');
+                        await fetchUser();
+                        Alert.alert('Success', 'Simulation Complete! Your dashboard has been populated with real-world scenarios.');
+                        navigation.goBack();
+                    } catch(e) {
+                        Alert.alert('Error', 'Simulation failed. Please try again.');
+                    } finally { setLoading(false); }
+                }}
+            ]);
+        }
     }
   };
 
