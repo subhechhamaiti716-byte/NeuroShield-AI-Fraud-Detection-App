@@ -84,7 +84,7 @@ def get_balance(current_user: User = Depends(get_current_user), db: Session = De
 
 @router.post("/simulate_link")
 def simulate_bank_link(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    from models.advanced import Transaction
+    from models.transaction import Transaction
     from datetime import datetime
     
     # 1. Set a healthy simulated balance
