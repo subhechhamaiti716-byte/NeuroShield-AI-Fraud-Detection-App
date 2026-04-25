@@ -81,3 +81,36 @@ def get_balance(current_user: User = Depends(get_current_user), db: Session = De
     except Exception as e:
         # If Plaid fails (e.g. invalid token), return current DB balance
         return {"balance": current_user.balance, "linked": False, "error": str(e)}
+
+@router.post("/simulate_link")
+def simulate_bank_link(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from models.advanced import Transaction
+    from datetime import datetime
+    
+    # 1. Set a healthy simulated balance
+    current_user.balance = 5000.00
+    
+    # 2. Add sample transactions
+    samples = [
+        {"merchant": "Starbucks", "amount": 450.00, "category": "Food", "is_suspicious": False},
+        {"merchant": "Amazon India", "amount": 1200.00, "category": "Shopping", "is_suspicious": False},
+        {"merchant": "Uber", "amount": 280.00, "category": "Travel", "is_suspicious": False},
+        # THE FRAUD ALERT TRANSACTION
+        {"merchant": "Unknown Merchant - Moscow", "amount": 2500.00, "category": "Transfer", "is_suspicious": True},
+    ]
+    
+    for s in samples:
+        tx = Transaction(
+            user_id=current_user.id,
+            merchant=s["merchant"],
+            amount=s["amount"],
+            category=s["category"],
+            is_suspicious=s["is_suspicious"],
+            location="Simulation",
+            risk_score=95 if s["is_suspicious"] else 5,
+            timestamp=datetime.now()
+        )
+        db.add(tx)
+    
+    db.commit()
+    return {"status": "Simulation successful", "balance": 5000.00}

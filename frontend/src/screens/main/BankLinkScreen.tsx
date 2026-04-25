@@ -53,7 +53,6 @@ const BankLinkScreen = ({ navigation }: any) => {
           setLoading(true);
           try {
             await apiClient.post(`/bank/exchange_public_token?public_token=${public_token}`);
-            // Fetch updated balance immediately
             await apiClient.get('/bank/balance');
             await fetchUser();
             window.alert('Bank account linked and balance updated!');
@@ -73,21 +72,21 @@ const BankLinkScreen = ({ navigation }: any) => {
       });
       handler.open();
     } else {
-        // Mock success for development/mobile without native SDK
-        Alert.alert('Sandbox Link', 'Simulate successful Plaid link (Sandbox Mode)?', [
+        // SIMULATION MODE
+        const msg = !linkToken ? 'Simulation Mode: No Plaid keys found. Would you like to simulate a bank link with sample data and Fraud Alerts?' : 'Link Sandbox Bank account?';
+        
+        Alert.alert('NeuroShield Simulation', msg, [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Link Bank', onPress: async () => {
+            { text: 'Simulate Link', onPress: async () => {
                 setLoading(true);
                 try {
-                    // For a real app, this needs a valid public token from Plaid UI
-                    // In sandbox mode, we can use 'public-sandbox-...'
-                    await apiClient.post('/bank/exchange_public_token?public_token=public-sandbox-5cd37e72-2298-4423-863a-e53aa6c5b058');
-                    await apiClient.get('/bank/balance');
+                    // Call a specialized simulation endpoint to populate data
+                    await apiClient.post('/bank/simulate_link');
                     await fetchUser();
-                    Alert.alert('Success', 'Mock bank account linked!');
+                    Alert.alert('Success', 'Simulation Complete! Your dashboard has been populated with real-world scenarios.');
                     navigation.goBack();
                 } catch(e) {
-                    Alert.alert('Error', 'Check your PLAID_CLIENT_ID and SECRET in .env');
+                    Alert.alert('Error', 'Simulation failed. Please try again.');
                 } finally { setLoading(false); }
             }}
         ]);
@@ -103,16 +102,18 @@ const BankLinkScreen = ({ navigation }: any) => {
       </Text>
 
       <TouchableOpacity 
-        style={[styles.button, (!linkToken || loading) && styles.buttonDisabled]} 
+        style={[styles.button, loading && styles.buttonDisabled]} 
         onPress={handleOpenPlaid}
-        disabled={!linkToken || loading}
+        disabled={loading}
       >
         {loading ? (
           <ActivityIndicator color="#0F172A" />
         ) : (
           <>
             <Ionicons name="link" size={20} color="#0F172A" />
-            <Text style={styles.buttonText}>Link with Plaid</Text>
+            <Text style={styles.buttonText}>
+              {!linkToken ? "Simulate Bank Link" : "Link with Plaid"}
+            </Text>
           </>
         )}
       </TouchableOpacity>
